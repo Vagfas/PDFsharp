@@ -1064,6 +1064,13 @@ namespace PdfSharp.Pdf.IO
                             int generation = ReadInteger();
                             ReadSymbol(Symbol.Keyword);
                             string token = _lexer.Token;
+
+                            //Hack to fix a broken Cross Reference Table where the start position is incorrectly declared as 1
+                            if (id == 1 && position == 0 && generation == 65535)
+                            {
+                                start = 0;
+                                id = 0;
+                            }
                             // Skip start entry
                             if (id == 0)
                                 continue;
