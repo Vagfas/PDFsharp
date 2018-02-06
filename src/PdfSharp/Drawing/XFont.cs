@@ -118,32 +118,32 @@ namespace PdfSharp.Drawing
         }
 
 #if CORE || GDI
-        /// <summary>
-        /// Initializes a new instance of the <see cref="XFont"/> class from a System.Drawing.FontFamily.
-        /// </summary>
-        /// <param name="fontFamily">The System.Drawing.FontFamily.</param>
-        /// <param name="emSize">The em size.</param>
-        /// <param name="style">The font style.</param>
-        public XFont(GdiFontFamily fontFamily, double emSize, XFontStyle style)
-            : this(fontFamily, emSize, style, new XPdfFontOptions(GlobalFontSettings.DefaultFontEncoding))
-        { }
+        ///// <summary>
+        ///// Initializes a new instance of the <see cref="XFont"/> class from a System.Drawing.FontFamily.
+        ///// </summary>
+        ///// <param name="fontFamily">The System.Drawing.FontFamily.</param>
+        ///// <param name="emSize">The em size.</param>
+        ///// <param name="style">The font style.</param>
+        //public XFont(GdiFontFamily fontFamily, double emSize, XFontStyle style)
+        //    : this(fontFamily, emSize, style, new XPdfFontOptions(GlobalFontSettings.DefaultFontEncoding))
+        //{ }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="XFont"/> class from a System.Drawing.FontFamily.
-        /// </summary>
-        /// <param name="fontFamily">The System.Drawing.FontFamily.</param>
-        /// <param name="emSize">The em size.</param>
-        /// <param name="style">The font style.</param>
-        /// <param name="pdfOptions">Additional PDF options.</param>
-        public XFont(GdiFontFamily fontFamily, double emSize, XFontStyle style, XPdfFontOptions pdfOptions)
-        {
-            _familyName = fontFamily.Name;
-            _gdiFontFamily = fontFamily;
-            _emSize = emSize;
-            _style = style;
-            _pdfOptions = pdfOptions;
-            InitializeFromGdi();
-        }
+        ///// <summary>
+        ///// Initializes a new instance of the <see cref="XFont"/> class from a System.Drawing.FontFamily.
+        ///// </summary>
+        ///// <param name="fontFamily">The System.Drawing.FontFamily.</param>
+        ///// <param name="emSize">The em size.</param>
+        ///// <param name="style">The font style.</param>
+        ///// <param name="pdfOptions">Additional PDF options.</param>
+        //public XFont(GdiFontFamily fontFamily, double emSize, XFontStyle style, XPdfFontOptions pdfOptions)
+        //{
+        //    _familyName = fontFamily.Name;
+        //    _gdiFontFamily = fontFamily;
+        //    _emSize = emSize;
+        //    _style = style;
+        //    _pdfOptions = pdfOptions;
+        //    InitializeFromGdi();
+        //}
 
         /// <summary>
         /// Initializes a new instance of the <see cref="XFont"/> class from a System.Drawing.Font.
@@ -789,7 +789,7 @@ namespace PdfSharp.Drawing
         {
             get { return _gdiFontFamily; }
         }
-        readonly GdiFontFamily _gdiFontFamily;
+        readonly GdiFontFamily _gdiFontFamily = null;
 
         internal GdiFont GdiFont
         {
