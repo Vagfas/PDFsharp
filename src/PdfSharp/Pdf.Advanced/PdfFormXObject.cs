@@ -3,7 +3,7 @@
 // Authors:
 //   Stefan Lange
 //
-// Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
+// Copyright (c) 2005-2017 empira Software GmbH, Cologne Area (Germany)
 //
 // http://www.pdfsharp.com
 // http://sourceforge.net/projects/pdfsharp
@@ -80,6 +80,7 @@ namespace PdfSharp.Pdf.Advanced
         internal PdfFormXObject(PdfDocument thisDocument, PdfImportedObjectTable importedObjectTable, XPdfForm form)
             : base(thisDocument)
         {
+            Debug.Assert(importedObjectTable != null);
             Debug.Assert(ReferenceEquals(thisDocument, importedObjectTable.Owner));
             Elements.SetName(Keys.Type, "/XObject");
             Elements.SetName(Keys.Subtype, "/Form");
@@ -90,7 +91,6 @@ namespace PdfSharp.Pdf.Advanced
                 // TODO more initialization here???
                 return;
             }
-            Debug.Assert(importedObjectTable != null);
 
             XPdfForm pdfForm = form;
             // Get import page
@@ -217,12 +217,15 @@ namespace PdfSharp.Pdf.Advanced
                 double height = rect.Height;
                 matrix.RotateAtPrepend(-rotate, new XPoint(width / 2, height / 2));
 
-                // Translate the image such that its center lies on the center of the rotated bounding box
-                double offset = (height - width) / 2;
-                if (height > width)
-                    matrix.TranslatePrepend(offset, offset);
-                else
-                    matrix.TranslatePrepend(-offset, -offset);
+                if (rotate != 180)
+                {
+                    // Translate the image such that its center lies on the center of the rotated bounding box
+                    double offset = (height - width) / 2;
+                    if (height > width)
+                        matrix.TranslatePrepend(offset, offset);
+                    else
+                        matrix.TranslatePrepend(-offset, -offset);
+                }
 
                 //string item = "[" + PdfEncoders.ToString(matrix) + "]";
                 //Elements[Keys.Matrix] = new PdfLiteral(item);

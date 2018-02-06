@@ -3,7 +3,7 @@
 // Authors:
 //   Stefan Lange
 //
-// Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
+// Copyright (c) 2005-2017 empira Software GmbH, Cologne Area (Germany)
 //
 // http://www.pdfsharp.com
 // http://sourceforge.net/projects/pdfsharp
@@ -71,9 +71,11 @@ namespace PdfSharp.Pdf
             : base(dict)
         {
             // Set Orientation depending on /Rotate.
-            int rotate = Elements.GetInteger(InheritablePageKeys.Rotate);
-            if (Math.Abs((rotate / 90)) % 2 == 1)
-                _orientation = PageOrientation.Landscape;
+
+            //!!!modTHHO 16-06-16 Do not set Orientation here. Setting Orientation is not enough. Other properties must also be changed when setting Orientation.
+            //int rotate = Elements.GetInteger(InheritablePageKeys.Rotate);
+            //if (Math.Abs((rotate / 90)) % 2 == 1)
+            //    _orientation = PageOrientation.Landscape;
         }
 
         void Initialize()
@@ -300,7 +302,7 @@ namespace PdfSharp.Pdf
             get { return _elements.GetInteger(InheritablePageKeys.Rotate); }
             set
             {
-                if (value / 90 * 90 != value)
+                if (value % 90 != 0)
                     throw new ArgumentException("Value must be a multiple of 90.");
                 _elements.SetInteger(InheritablePageKeys.Rotate, value);
             }

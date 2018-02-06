@@ -3,7 +3,7 @@
 // Authors:
 //   Stefan Lange
 //
-// Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
+// Copyright (c) 2005-2017 empira Software GmbH, Cologne Area (Germany)
 //
 // http://www.pdfsharp.com
 // http://sourceforge.net/projects/pdfsharp
@@ -262,7 +262,7 @@ namespace PdfSharp.Pdf.IO
         /// </summary>
         public static PdfDocument Open(Stream stream, PdfDocumentOpenMode openmode, PdfPasswordProvider passwordProvider)
         {
-            return Open(stream, null, openmode);
+            return Open(stream, null, openmode, passwordProvider);
         }
         /// <summary>
         /// Opens an existing PDF document.
