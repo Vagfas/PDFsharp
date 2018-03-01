@@ -228,8 +228,13 @@ namespace PdfSharp.Pdf.IO
                 pos = _idxChar + 1;
 
 			// Verify stream length and resolve if bad
-			string post_stream = ReadRawString(pos + length, ("endstream").Length);
-			if (post_stream != "endstream")
+			string post_stream = ReadRawString(pos + length, ("endstream").Length + 2);
+
+			// Handle cases where the last char of a stream is \r or \n and is not included in length
+			while (post_stream[0] == Chars.LF || post_stream[0] == Chars.CR)
+				post_stream = post_stream.Remove(0, 1);
+
+			if (!post_stream.StartsWith("endstream"))
 			{
 				// find the first endstream occurrence
 				// first check to see if it is within the specified stream length.
