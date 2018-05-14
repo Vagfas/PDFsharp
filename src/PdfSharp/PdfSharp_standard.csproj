@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>PdfSharp</RootNamespace>
+    <AssemblyName>PdfSharp-gdi</AssemblyName>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <LangVersion>latest</LangVersion>
+    <DefineConstants>TRACE;RELEASE;GDI;NETSTANDARD2_0</DefineConstants>
+    <OutputPath>..\bin\Release\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <LangVersion>latest</LangVersion>
+    <DefineConstants>TRACE;DEBUG;GDI;NETSTANDARD2_0</DefineConstants>
+    <OutputPath>..\bin\Debug</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Forms\PagePreview.cs" />
+    <Compile Remove="Forms\PagePreviewCanvas.cs" />
+    <Compile Remove="Properties\AssemblyInfo.cs" />
+    <Compile Remove="Windows\PagePreview-ag.xaml.cs" />
+    <Compile Remove="Windows\PagePreview-wpf.xaml.cs" />
+    <Compile Remove="Windows\PagePreviewDesignTimeData.cs" />
+    <Compile Remove="Windows\VisualPresenter.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Windows\PagePreview-ag.xaml.cs" />
+    <None Include="Windows\PagePreview-wpf.xaml.cs" />
+    <None Include="Windows\PagePreviewDesignTimeData.cs" />
+    <None Include="Windows\VisualPresenter.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" Version="4.5.0-rc1" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.5.0-rc1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+</Project>

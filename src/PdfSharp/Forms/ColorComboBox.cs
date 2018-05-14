@@ -30,13 +30,13 @@
 using System;
 using System.Collections;
 using System.Text;
-#if GDI
+#if GDI && !NETSTANDARD2_0
 using System.Drawing;
 using System.Windows.Forms;
 #endif
 using PdfSharp.Drawing;
 
-#if GDI
+#if GDI && !NETSTANDARD2_0
 namespace PdfSharp.Forms
 {
     /// <summary>

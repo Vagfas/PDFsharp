@@ -137,9 +137,9 @@ namespace PdfSharp.Drawing
 #endif
 
 #if GDI
-        XColor(KnownColor knownColor)
+        /*XColor(KnownColor knownColor)
             : this(System.Drawing.Color.FromKnownColor(knownColor))
-        { }
+        { }*/
 #endif
 
 #if UWP
@@ -307,16 +307,16 @@ namespace PdfSharp.Drawing
         /// <summary>
         /// Creates an XColor from the specified pre-defined color.
         /// </summary>
-        public static XColor FromKnownColor(KnownColor color)
+        /*public static XColor FromKnownColor(KnownColor color)
         {
             return new XColor(color);
-        }
+        }*/
 #endif
 
         /// <summary>
         /// Creates an XColor from the specified name of a pre-defined color.
         /// </summary>
-        public static XColor FromName(string name)
+        /*public static XColor FromName(string name)
         {
 #if GDI
             // The implementation in System.Drawing.dll is interesting. It uses a ColorConverter
@@ -331,7 +331,7 @@ namespace PdfSharp.Drawing
             // ReSharper restore EmptyGeneralCatchClause
 #endif
             return Empty;
-        }
+        }*/
 
         /// <summary>
         /// Gets or sets the color space to be used for PDF generation.

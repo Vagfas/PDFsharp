@@ -42,6 +42,8 @@ using System.Windows.Media;
 #error This file must only be included in GDI build.
 #endif
 
+#if !NETSTANDARD2_0
+
 namespace PdfSharp.Forms
 {
     /// <summary>
@@ -85,3 +87,4 @@ namespace PdfSharp.Forms
         }
     }
 }
+#endif
