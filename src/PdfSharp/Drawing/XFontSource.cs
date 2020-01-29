@@ -47,9 +47,36 @@ using WpfGlyphTypeface = System.Windows.Media.GlyphTypeface;
 #endif
 using PdfSharp.Internal;
 using PdfSharp.Fonts.OpenType;
+using System.Drawing;
+using System.Collections.Generic;
 
 namespace PdfSharp.Drawing
 {
+    
+    public static class FontLoader
+    {
+        public static Dictionary<string, byte[]> FontCache = new Dictionary<string, byte[]>();
+        private static Func<string, byte[]> LaddaFunc;
+        private static Func<Font, string> ResolveFunc;
+        public static void Init(Func<string, byte[]> laddaFunc, Func<Font, string> resolveFunc)
+        {
+            LaddaFunc = laddaFunc;
+            ResolveFunc = resolveFunc;
+        }
+
+        public static byte[] LaddaFont(GdiFont gdiFont)
+        {
+            var font = ResolveFunc(gdiFont as Font);
+            if (FontCache.ContainsKey(font))
+                return FontCache[font];
+
+            var bytes = LaddaFunc(font);
+            FontCache[font] = bytes;
+
+            return bytes;
+        }
+    }
+
     /// <summary>
     /// The bytes of a font file.
     /// </summary>
@@ -94,82 +121,12 @@ namespace PdfSharp.Drawing
         internal static XFontSource GetOrCreateFromGdi(string typefaceKey, GdiFont gdiFont)
         {
             byte[] bytes = ReadFontBytesFromGdi(gdiFont);
-            XFontSource fontSource = GetOrCreateFrom(typefaceKey, bytes);
-            return fontSource;
+            return GetOrCreateFrom(typefaceKey, bytes);
         }
 
         static byte[] ReadFontBytesFromGdi(GdiFont gdiFont)
         {
-            // Weird: LastError is always 123 or 127. Comment out Debug.Assert.
-            int error = Marshal.GetLastWin32Error();
-            //Debug.Assert(error == 0);
-            error = Marshal.GetLastWin32Error();
-            //Debug.Assert(error == 0);
-
-            IntPtr hfont = gdiFont.ToHfont();
-#if true
-            IntPtr hdc = NativeMethods.GetDC(IntPtr.Zero);
-#else
-            NativeMethods.LOGFONT logFont = new NativeMethods.LOGFONT();
-            logFont.lfHeight = 30;
-            logFont.lfWidth = 0;
-            logFont.lfEscapement = 0;
-            logFont.lfOrientation = 0;
-            logFont.lfWeight = 400;
-            logFont.lfItalic = 0;
-            logFont.lfUnderline = 0;
-            logFont.lfStrikeOut = 0;
-            logFont.lfCharSet = 0;
-            logFont.lfOutPrecision = 0;
-            logFont.lfClipPrecision = 0;
-            logFont.lfQuality = 0;
-            logFont.lfPitchAndFamily = 0;
-            logFont.lfFaceName = "Arial";
-
-            gdiFont.ToLogFont(logFont);
-
-            hfont = NativeMethods.CreateFontIndirect(logFont);
-
-
-            // IntPtr hdc = NativeMethods.CreateDC("DISPLAY", null, null, IntPtr.Zero);
-            IntPtr hdc = NativeMethods.CreateCompatibleDC(IntPtr.Zero);
-#endif
-            error = Marshal.GetLastWin32Error();
-            //Debug.Assert(error == 0);
-
-            IntPtr oldFont = NativeMethods.SelectObject(hdc, hfont);
-            error = Marshal.GetLastWin32Error();
-            //Debug.Assert(error == 0);
-
-            // Get size of the font file.
-            bool isTtcf = false;
-            // In Azure I get 0xc0000022
-            int size = NativeMethods.GetFontData(hdc, 0, 0, null, 0);
-
-            // Check for ntstatus.h: #define STATUS_ACCESS_DENIED             ((NTSTATUS)0xC0000022L)
-            if ((uint)size == 0xc0000022)
-                throw new InvalidOperationException("Microsoft Azure returns STATUS_ACCESS_DENIED ((NTSTATUS)0xC0000022L) from GetFontData. This is a bug in Azure. You must implement a FontResolver to circumvent this issue.");
-
-            if (size == NativeMethods.GDI_ERROR)
-            {
-                // Assume that the font file is a true type collection.
-                size = NativeMethods.GetFontData(hdc, ttcf, 0, null, 0);
-                isTtcf = true;
-            }
-            error = Marshal.GetLastWin32Error();
-            //Debug.Assert(error == 0);
-
-            if (size == 0)
-                throw new InvalidOperationException("Cannot retrieve font data.");
-
-            byte[] bytes = new byte[size];
-            int effectiveSize = NativeMethods.GetFontData(hdc, isTtcf ? ttcf : 0, 0, bytes, size);
-            Debug.Assert(size == effectiveSize);
-            // Clean up.
-            NativeMethods.SelectObject(hdc, oldFont);
-            NativeMethods.ReleaseDC(IntPtr.Zero, hdc);
-
-            return bytes;
+            return FontLoader.LaddaFont(gdiFont);
         }
 #endif
 

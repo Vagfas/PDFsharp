@@ -94,7 +94,7 @@ namespace PdfSharp.Forms
         /// <summary>
         /// Gets a DeviceInfo for the specifed device context.
         /// </summary>
-        [SuppressUnmanagedCodeSecurity]
+       /* [SuppressUnmanagedCodeSecurity]
         public static DeviceInfos GetInfos(IntPtr hdc)
         {
             DeviceInfos devInfo;
@@ -113,16 +113,16 @@ namespace PdfSharp.Forms
             return devInfo;
         }
 
-        [DllImport("gdi32.dll")]
-        static extern int GetDeviceCaps(IntPtr hdc, int capability);
-        // ReSharper disable InconsistentNaming
-        const int HORZSIZE = 4;
-        const int VERTSIZE = 6;
-        const int HORZRES = 8;
-        const int VERTRES = 10;
-        const int LOGPIXELSX = 88;
-        const int LOGPIXELSY = 90;
-        // ReSharper restore InconsistentNaming
+         [DllImport("gdi32.dll")]
+         static extern int GetDeviceCaps(IntPtr hdc, int capability);
+         // ReSharper disable InconsistentNaming
+         const int HORZSIZE = 4;
+         const int VERTSIZE = 6;
+         const int HORZRES = 8;
+         const int VERTRES = 10;
+         const int LOGPIXELSX = 88;
+         const int LOGPIXELSY = 90;
+         // ReSharper restore InconsistentNaming*/
     }
 }
 #endif

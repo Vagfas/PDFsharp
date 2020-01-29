@@ -106,7 +106,7 @@ namespace PdfSharp.Internal
             public LOGFONT() { }
         }
 
-        [DllImport("user32.dll")]
+        /*[DllImport("user32.dll")]
         public static extern IntPtr GetDC(IntPtr hwnd);
 
         [DllImport("user32.dll")]
@@ -149,7 +149,7 @@ namespace PdfSharp.Internal
         public const int LOGPIXELSX = 88; // Logical pixels/inch in X
         public const int LOGPIXELSY = 90; // Logical pixels/inch in Y
         [DllImport("gdi32.dll")]
-        public static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
+        public static extern int GetDeviceCaps(IntPtr hdc, int nIndex);*/
     }
 #endif
 }
