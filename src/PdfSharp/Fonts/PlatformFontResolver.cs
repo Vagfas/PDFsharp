@@ -258,7 +258,7 @@ namespace PdfSharp.Fonts
             else
             {
                 // Get or create the font source and cache it under the specified typeface key.
-                fontSource = XFontSource.GetOrCreateFromGdi(typefaceKey, font);
+                //fontSource = XFontSource.GetOrCreateFromGdi(typefaceKey, font);
             }
             return fontSource;
         }

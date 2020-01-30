@@ -49,39 +49,18 @@ using PdfSharp.Internal;
 using PdfSharp.Fonts.OpenType;
 using System.Drawing;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace PdfSharp.Drawing
 {
     
-    public static class FontLoader
-    {
-        public static Dictionary<string, byte[]> FontCache = new Dictionary<string, byte[]>();
-        private static Func<string, byte[]> LaddaFunc;
-        private static Func<Font, string> ResolveFunc;
-        public static void Init(Func<string, byte[]> laddaFunc, Func<Font, string> resolveFunc)
-        {
-            LaddaFunc = laddaFunc;
-            ResolveFunc = resolveFunc;
-        }
-
-        public static byte[] LaddaFont(GdiFont gdiFont)
-        {
-            var font = ResolveFunc(gdiFont as Font);
-            if (FontCache.ContainsKey(font))
-                return FontCache[font];
-
-            var bytes = LaddaFunc(font);
-            FontCache[font] = bytes;
-
-            return bytes;
-        }
-    }
+    
 
     /// <summary>
     /// The bytes of a font file.
     /// </summary>
     [DebuggerDisplay("{DebuggerDisplay}")]
-    internal class XFontSource
+    public class XFontSource
     {
         // Implementation Notes
         // 
@@ -93,7 +72,7 @@ namespace PdfSharp.Drawing
         // Signature of a true type collection font.
         const uint ttcf = 0x66637474;
 
-        XFontSource(byte[] bytes, ulong key)
+        public XFontSource(byte[] bytes, ulong key)
         {
             _fontName = null;
             _bytes = bytes;
@@ -118,16 +97,10 @@ namespace PdfSharp.Drawing
         }
 
 #if CORE || GDI
-        internal static XFontSource GetOrCreateFromGdi(string typefaceKey, GdiFont gdiFont)
+        /*internal static XFontSource GetOrCreateFromGdi(string typefaceKey, GdiFont gdiFont)
         {
-            byte[] bytes = ReadFontBytesFromGdi(gdiFont);
-            return GetOrCreateFrom(typefaceKey, bytes);
-        }
-
-        static byte[] ReadFontBytesFromGdi(GdiFont gdiFont)
-        {
-            return FontLoader.LaddaFont(gdiFont);
-        }
+            return GetOrCreateFrom(typefaceKey, FontLoader.LaddaTTFFont(gdiFont));
+        }*/
 #endif
 
 #if WPF && !SILVERLIGHT

@@ -67,7 +67,7 @@ namespace PdfSharp.Drawing
     /// Specifies a physical font face that corresponds to a font file on the disk or in memory.
     /// </summary>
     [DebuggerDisplay("{DebuggerDisplay}")]
-    internal sealed class XGlyphTypeface
+    public class XGlyphTypeface
     {
         // Implementation Notes
         // XGlyphTypeface is the centerpiece for font management. There is a one to one relationship
@@ -78,7 +78,6 @@ namespace PdfSharp.Drawing
         // * XGlyphTypeface hold a reference to an OpenTypeFontface. 
         // * 
         //
-
         const string KeyPrefix = "tk:";  // "typeface key"
 
 #if CORE || GDI
@@ -115,215 +114,6 @@ namespace PdfSharp.Drawing
             _fontSource = fontSource;
 
             Initialize();
-        }
-#endif
-
-#if WPF
-        XGlyphTypeface(string key, XFontFamily fontFamily, XFontSource fontSource, XStyleSimulations styleSimulations, WpfTypeface wpfTypeface, WpfGlyphTypeface wpfGlyphTypeface)
-        {
-            _key = key;
-            _fontFamily = fontFamily;
-            _fontSource = fontSource;
-            _styleSimulations = styleSimulations;
-
-            _fontface = OpenTypeFontface.CetOrCreateFrom(fontSource);
-            Debug.Assert(ReferenceEquals(_fontSource.Fontface, _fontface));
-
-            _wpfTypeface = wpfTypeface;
-            _wpfGlyphTypeface = wpfGlyphTypeface;
-
-            Initialize();
-        }
-#endif
-
-#if NETFX_CORE || UWP
-        XGlyphTypeface(string key, XFontFamily fontFamily, XFontSource fontSource, XStyleSimulations styleSimulations)
-        {
-            _key = key;
-            _fontFamily = fontFamily;
-            _fontSource = fontSource;
-            _styleSimulations = styleSimulations;
-
-            _fontface = OpenTypeFontface.CetOrCreateFrom(fontSource);
-            Debug.Assert(ReferenceEquals(_fontSource.Fontface, _fontface));
-
-            //_wpfTypeface = wpfTypeface;
-            //_wpfGlyphTypeface = wpfGlyphTypeface;
-
-            Initialize();
-        }
-#endif
-
-        public static XGlyphTypeface GetOrCreateFrom(string familyName, FontResolvingOptions fontResolvingOptions)
-        {
-            // Check cache for requested type face.
-            string typefaceKey = ComputeKey(familyName, fontResolvingOptions);
-            XGlyphTypeface glyphTypeface;
-            try
-            {
-                // Lock around TryGetGlyphTypeface and AddGlyphTypeface.
-                Lock.EnterFontFactory();
-                if (GlyphTypefaceCache.TryGetGlyphTypeface(typefaceKey, out glyphTypeface))
-                {
-                    // Just return existing one.
-                    return glyphTypeface;
-                }
-
-                // Resolve typeface by FontFactory.
-                FontResolverInfo fontResolverInfo = FontFactory.ResolveTypeface(familyName, fontResolvingOptions, typefaceKey);
-                if (fontResolverInfo == null)
-                {
-                    // No fallback - just stop.
-                    throw new InvalidOperationException("No appropriate font found.");
-                }
-
-#if CORE || GDI
-                GdiFont gdiFont = null;
-#endif
-#if WPF
-                WpfFontFamily wpfFontFamily = null;
-                WpfTypeface wpfTypeface = null;
-                WpfGlyphTypeface wpfGlyphTypeface = null;
-#endif
-#if UWP
-                // Nothing to do.
-#endif
-                // Now create the font family at the first.
-                XFontFamily fontFamily;
-                PlatformFontResolverInfo platformFontResolverInfo = fontResolverInfo as PlatformFontResolverInfo;
-                if (platformFontResolverInfo != null)
-                {
-                    // Case: fontResolverInfo was created by platform font resolver
-                    // and contains platform specific objects that are reused.
-#if CORE || GDI
-                    // Reuse GDI+ font from platform font resolver.
-                    gdiFont = platformFontResolverInfo.GdiFont;
-                    fontFamily = XFontFamily.GetOrCreateFromGdi(gdiFont);
-#endif
-#if WPF
-#if !SILVERLIGHT
-                    // Reuse WPF font family created from platform font resolver.
-                    wpfFontFamily = platformFontResolverInfo.WpfFontFamily;
-                    wpfTypeface = platformFontResolverInfo.WpfTypeface;
-                    wpfGlyphTypeface = platformFontResolverInfo.WpfGlyphTypeface;
-                    fontFamily = XFontFamily.GetOrCreateFromWpf(wpfFontFamily);
-#else
-                    fontFamily = XFontFamily.GetOrCreateFromWpf(new WpfFontFamily(familyName));
-#endif
-#endif
-#if NETFX_CORE || UWP
-                    fontFamily = null;
-#endif
-                }
-                else
-                {
-                    // Case: fontResolverInfo was created by custom font resolver.
-
-                    // Get or create font family for custom font resolver retrieved font source.
-                    fontFamily = XFontFamily.GetOrCreateFontFamily(familyName);
-                }
-
-                // We have a valid font resolver info. That means we also have an XFontSource object loaded in the cache.
-                XFontSource fontSource = FontFactory.GetFontSourceByFontName(fontResolverInfo.FaceName);
-                Debug.Assert(fontSource != null);
-
-                // Each font source already contains its OpenTypeFontface.
-#if CORE || GDI
-                glyphTypeface = new XGlyphTypeface(typefaceKey, fontFamily, fontSource, fontResolverInfo.StyleSimulations, gdiFont);
-#endif
-#if WPF
-                glyphTypeface = new XGlyphTypeface(typefaceKey, fontFamily, fontSource, fontResolverInfo.StyleSimulations, wpfTypeface, wpfGlyphTypeface);
-#endif
-#if NETFX_CORE || UWP
-                glyphTypeface = new XGlyphTypeface(typefaceKey, fontFamily, fontSource, fontResolverInfo.StyleSimulations);
-#endif
-                GlyphTypefaceCache.AddGlyphTypeface(glyphTypeface);
-            }
-            finally { Lock.ExitFontFactory(); }
-            return glyphTypeface;
-        }
-
-#if CORE || GDI
-        public static XGlyphTypeface GetOrCreateFromGdi(GdiFont gdiFont)
-        {
-            // $TODO THHO Lock???
-            string typefaceKey = ComputeKey(gdiFont);
-            XGlyphTypeface glyphTypeface;
-            if (GlyphTypefaceCache.TryGetGlyphTypeface(typefaceKey, out glyphTypeface))
-            {
-                // We have the glyph typeface already in cache.
-                return glyphTypeface;
-            }
-
-            XFontFamily fontFamily = XFontFamily.GetOrCreateFromGdi(gdiFont);
-            XFontSource fontSource = XFontSource.GetOrCreateFromGdi(typefaceKey, gdiFont);
-
-            // Check if styles must be simulated.
-            XStyleSimulations styleSimulations = XStyleSimulations.None;
-            if (gdiFont.Bold && !fontSource.Fontface.os2.IsBold)
-                styleSimulations |= XStyleSimulations.BoldSimulation;
-            if (gdiFont.Italic && !fontSource.Fontface.os2.IsItalic)
-                styleSimulations |= XStyleSimulations.ItalicSimulation;
-
-            glyphTypeface = new XGlyphTypeface(typefaceKey, fontFamily, fontSource, styleSimulations, gdiFont);
-            GlyphTypefaceCache.AddGlyphTypeface(glyphTypeface);
-
-            return glyphTypeface;
-        }
-#endif
-
-#if WPF && !SILVERLIGHT
-        public static XGlyphTypeface GetOrCreateFromWpf(WpfTypeface wpfTypeface)
-        {
-#if DEBUG
-            if (wpfTypeface.FontFamily.Source == "Segoe UI Semilight")
-                wpfTypeface.GetType();
-#endif
-            //string typefaceKey = ComputeKey(wpfTypeface);
-            //XGlyphTypeface glyphTypeface;
-            //if (GlyphTypefaceCache.TryGetGlyphTypeface(typefaceKey, out glyphTypeface))
-            //{
-            //    // We have the glyph typeface already in cache.
-            //    return glyphTypeface;
-            //}
-
-            // Lock around TryGetGlyphTypeface and AddGlyphTypeface.
-            try
-            {
-                Lock.EnterFontFactory();
-
-                // Create WPF glyph typeface.
-                WpfGlyphTypeface wpfGlyphTypeface;
-                if (!wpfTypeface.TryGetGlyphTypeface(out wpfGlyphTypeface))
-                    return null;
-
-                string typefaceKey = ComputeKey(wpfGlyphTypeface);
-
-                string name1 = wpfGlyphTypeface.DesignerNames[FontHelper.CultureInfoEnUs];
-                string name2 = wpfGlyphTypeface.FaceNames[FontHelper.CultureInfoEnUs];
-                string name3 = wpfGlyphTypeface.FamilyNames[FontHelper.CultureInfoEnUs];
-                string name4 = wpfGlyphTypeface.ManufacturerNames[FontHelper.CultureInfoEnUs];
-                string name5 = wpfGlyphTypeface.Win32FaceNames[FontHelper.CultureInfoEnUs];
-                string name6 = wpfGlyphTypeface.Win32FamilyNames[FontHelper.CultureInfoEnUs];
-
-                XGlyphTypeface glyphTypeface;
-                if (GlyphTypefaceCache.TryGetGlyphTypeface(typefaceKey, out glyphTypeface))
-                {
-                    // We have the glyph typeface already in cache.
-                    return glyphTypeface;
-                }
-
-                XFontFamily fontFamily = XFontFamily.GetOrCreateFromWpf(wpfTypeface.FontFamily);
-                XFontSource fontSource = XFontSource.GetOrCreateFromWpf(typefaceKey, wpfGlyphTypeface);
-
-                glyphTypeface = new XGlyphTypeface(typefaceKey, fontFamily, fontSource,
-                    (XStyleSimulations)wpfGlyphTypeface.StyleSimulations,
-                    wpfTypeface, wpfGlyphTypeface);
-                GlyphTypefaceCache.AddGlyphTypeface(glyphTypeface);
-
-                return glyphTypeface;
-            }
-            finally { Lock.ExitFontFactory(); }
         }
 #endif
 
@@ -503,37 +293,6 @@ namespace PdfSharp.Drawing
             return key;
         }
 #endif
-#if WPF && !SILVERLIGHT
-        internal static string ComputeKey(WpfGlyphTypeface wpfGlyphTypeface)
-        {
-            string name1 = wpfGlyphTypeface.DesignerNames[FontHelper.CultureInfoEnUs];
-            string faceName = wpfGlyphTypeface.FaceNames[FontHelper.CultureInfoEnUs];
-            string familyName = wpfGlyphTypeface.FamilyNames[FontHelper.CultureInfoEnUs];
-            string name4 = wpfGlyphTypeface.ManufacturerNames[FontHelper.CultureInfoEnUs];
-            string name5 = wpfGlyphTypeface.Win32FaceNames[FontHelper.CultureInfoEnUs];
-            string name6 = wpfGlyphTypeface.Win32FamilyNames[FontHelper.CultureInfoEnUs];
-
-
-            string name = familyName.ToLower() + '/' + faceName.ToLowerInvariant();
-            string style = wpfGlyphTypeface.Style.ToString();
-            string weight = wpfGlyphTypeface.Weight.ToString();
-            string stretch = wpfGlyphTypeface.Stretch.ToString();
-            string simulations = wpfGlyphTypeface.StyleSimulations.ToString();
-
-            //string key = name + '/' + style + '/' + weight + '/' + stretch + '/' + simulations;
-
-            string key = KeyPrefix + name + '/' + style.Substring(0, 1) + '/' + wpfGlyphTypeface.Weight.ToOpenTypeWeight().ToString(CultureInfo.InvariantCulture) + '/' + wpfGlyphTypeface.Stretch.ToOpenTypeStretch().ToString(CultureInfo.InvariantCulture);
-            switch (wpfGlyphTypeface.StyleSimulations)
-            {
-                case WpfStyleSimulations.BoldSimulation: key += "|b+/i-"; break;
-                case WpfStyleSimulations.ItalicSimulation: key += "|b-/i+"; break;
-                case WpfStyleSimulations.BoldItalicSimulation: key += "|b+/i+"; break;
-                case WpfStyleSimulations.None: break;
-            }
-            return key.ToLowerInvariant();
-        }
-#endif
-
         public string Key
         {
             get { return _key; }
@@ -549,45 +308,6 @@ namespace PdfSharp.Drawing
         private readonly GdiFont _gdiFont;
 #endif
 
-#if WPF
-        internal WpfTypeface WpfTypeface
-        {
-            get { return _wpfTypeface; }
-        }
-        readonly WpfTypeface _wpfTypeface;
-
-        internal WpfGlyphTypeface WpfGlyphTypeface
-        {
-            get { return _wpfGlyphTypeface; }
-        }
-        readonly WpfGlyphTypeface _wpfGlyphTypeface;
-#endif
-
-#if SILVERLIGHT_
-    /// <summary>
-    /// Gets the FontSource object used in Silverlight 4.
-    /// </summary>
-        public FontSource FontSource
-        {
-            get
-            {
-                if (_fontSource == null)
-                {
-#if true
-                    MemoryStream stream = new MemoryStream(_fontface.FontData.Bytes);
-                    _fontSource = new FontSource(stream);
-#else
-                    using (MemoryStream stream = new MemoryStream(_fontface.Data))
-                    {
-                        _fontSource = new FontSource(stream);
-                    }
-#endif
-                }
-                return _fontSource;
-            }
-        }
-        FontSource _fontSource;
-#endif
 
         /// <summary>
         /// Gets the DebuggerDisplayAttribute text.

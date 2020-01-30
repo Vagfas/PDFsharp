@@ -105,51 +105,6 @@ namespace PdfSharp.Internal
             }
             public LOGFONT() { }
         }
-
-        /*[DllImport("user32.dll")]
-        public static extern IntPtr GetDC(IntPtr hwnd);
-
-        [DllImport("user32.dll")]
-        public static extern IntPtr ReleaseDC(IntPtr hwnd, IntPtr hdc);
-
-        [DllImport("gdi32.dll", SetLastError = true)]
-        public static extern int GetFontData(
-            IntPtr hdc, // handle to DC
-            uint dwTable, // metric table name
-            uint dwOffset, // offset into table
-            byte[] lpvBuffer, // buffer for returned data
-            int cbData // length of data
-            );
-
-        //  CreateDCA(__in_opt LPCSTR pwszDriver, __in_opt LPCSTR pwszDevice, __in_opt LPCSTR pszPort, __in_opt CONST DEVMODEA* pdm);
-        [DllImport("gdi32.dll", SetLastError = true)]
-        public static extern IntPtr CreateDC(
-            string driver,
-            string device,
-            string port,
-            IntPtr data
-            );
-
-        [DllImport("gdi32.dll", SetLastError = true)]
-        public static extern IntPtr CreateCompatibleDC(IntPtr hdc);
-
-        [DllImport("gdi32.dll", EntryPoint = "CreateFontIndirectW")]
-        public static extern IntPtr CreateFontIndirect(LOGFONT lpLogFont);
-
-        [DllImport("gdi32.dll")]
-        public static extern IntPtr SelectObject(IntPtr hdc, IntPtr hgdiobj);
-
-        [DllImport("gdi32.dll")]
-        public static extern bool DeleteObject(IntPtr hgdiobj);
-
-        public const int HORZSIZE = 4; // Horizontal size in millimeters
-        public const int VERTSIZE = 6; // Vertical size in millimeters
-        public const int HORZRES = 8; // Horizontal width in pixels
-        public const int VERTRES = 10; // Vertical height in pixels
-        public const int LOGPIXELSX = 88; // Logical pixels/inch in X
-        public const int LOGPIXELSY = 90; // Logical pixels/inch in Y
-        [DllImport("gdi32.dll")]
-        public static extern int GetDeviceCaps(IntPtr hdc, int nIndex);*/
     }
 #endif
 }

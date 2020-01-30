@@ -41,7 +41,7 @@ namespace PdfSharp.Fonts
     /// <summary>
     /// Parameters that affect font selection.
     /// </summary>
-    class FontResolvingOptions
+    public class FontResolvingOptions
     {
         public FontResolvingOptions(XFontStyle fontStyle)
         {

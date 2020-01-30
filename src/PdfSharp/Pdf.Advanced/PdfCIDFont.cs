@@ -106,17 +106,19 @@ namespace PdfSharp.Pdf.Advanced
                 subSet = FontDescriptor._descriptor.FontFace;
             else
                 subSet = FontDescriptor._descriptor.FontFace.CreateFontSubSet(_cmapInfo.GlyphIndices, true);
-            byte[] fontData = subSet.FontSource.Bytes;
+            //byte[] fontData = subSet.FontSource.Bytes;
             PdfDictionary fontStream = new PdfDictionary(Owner);
             Owner.Internals.AddObject(fontStream);
             FontDescriptor.Elements[PdfFontDescriptor.Keys.FontFile2] = fontStream.Reference;
 
+            var fontData = FontLoader.DeflateData(subSet.FullFaceName);
+
             fontStream.Elements["/Length1"] = new PdfInteger(fontData.Length);
-            if (!Owner.Options.NoCompression)
-            {
-                fontData = Filtering.FlateDecode.Encode(fontData, _document.Options.FlateEncodeMode);
+            //if (!Owner.Options.NoCompression)
+            //{
+                //fontData = Filtering.FlateDecode.Encode(fontData, _document.Options.FlateEncodeMode);
                 fontStream.Elements["/Filter"] = new PdfName("/FlateDecode");
-            }
+           // }
             fontStream.Elements["/Length"] = new PdfInteger(fontData.Length);
             fontStream.CreateStream(fontData);
         }
