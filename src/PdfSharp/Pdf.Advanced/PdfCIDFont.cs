@@ -94,32 +94,22 @@ namespace PdfSharp.Pdf.Advanced
         {
             base.PrepareForSave();
 
-#if DEBUG_
-            if (FontDescriptor._descriptor.FontFace.loca == null)
-            {
-                GetType();
-            }
-#endif
             // CID fonts must be always embedded. PDFsharp embeds automatically a subset.
             OpenTypeFontface subSet = null;
             if (FontDescriptor._descriptor.FontFace.loca == null)
                 subSet = FontDescriptor._descriptor.FontFace;
             else
                 subSet = FontDescriptor._descriptor.FontFace.CreateFontSubSet(_cmapInfo.GlyphIndices, true);
-            //byte[] fontData = subSet.FontSource.Bytes;
             PdfDictionary fontStream = new PdfDictionary(Owner);
             Owner.Internals.AddObject(fontStream);
             FontDescriptor.Elements[PdfFontDescriptor.Keys.FontFile2] = fontStream.Reference;
 
-            var fontData = FontLoader.DeflateData(subSet.FullFaceName);
+            var fontData = FontLoader.DeflateData(subSet.CheckSum, subSet.FontSource);
 
+            // /Length1 might not be needed?
             fontStream.Elements["/Length1"] = new PdfInteger(fontData.Length);
-            //if (!Owner.Options.NoCompression)
-            //{
-                //fontData = Filtering.FlateDecode.Encode(fontData, _document.Options.FlateEncodeMode);
-                fontStream.Elements["/Filter"] = new PdfName("/FlateDecode");
-           // }
-            fontStream.Elements["/Length"] = new PdfInteger(fontData.Length);
+            fontStream.Elements["/Filter"]  = new PdfName("/FlateDecode");
+            fontStream.Elements["/Length"]  = new PdfInteger(fontData.Length);
             fontStream.CreateStream(fontData);
         }
 

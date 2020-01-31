@@ -50,7 +50,7 @@ namespace PdfSharp.Pdf.IO
             _securityHandler = securityHandler;
             //System.Xml.XmlTextWriter
 #if DEBUG
-            _layout = PdfWriterLayout.Verbose;
+            _layout = PdfWriterLayout.Compact;
 #endif
         }
 

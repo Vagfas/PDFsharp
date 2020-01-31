@@ -61,7 +61,7 @@ namespace PdfSharp.Pdf
             set { _compressContentStreams = value; }
         }
 #if DEBUG
-        bool _compressContentStreams = false;
+        bool _compressContentStreams = true;
 #else
         bool _compressContentStreams = true;
 #endif
