@@ -104,10 +104,10 @@ namespace PdfSharp.Pdf.Advanced
             Owner.Internals.AddObject(fontStream);
             FontDescriptor.Elements[PdfFontDescriptor.Keys.FontFile2] = fontStream.Reference;
 
+            fontStream.Elements["/Length1"] = new PdfInteger(subSet.FontSource.Bytes.Length);
+
             var fontData = FontLoader.DeflateData(subSet.CheckSum, subSet.FontSource);
 
-            // /Length1 might not be needed?
-            fontStream.Elements["/Length1"] = new PdfInteger(fontData.Length);
             fontStream.Elements["/Filter"]  = new PdfName("/FlateDecode");
             fontStream.Elements["/Length"]  = new PdfInteger(fontData.Length);
             fontStream.CreateStream(fontData);
