@@ -212,9 +212,10 @@ namespace PdfSharp.Drawing
 
 
 #if GDI  // TODO: In CORE build it is not necessary to create a GDI font at all
+            var style = _style & XFontStyle.BoldItalic;
             var fontSource = FontLoader.LaddaFontSource(FontLoader.LaddaTTFFont(_familyName, (float)_emSize, 
-                (_style & XFontStyle.BoldItalic) == XFontStyle.Bold, 
-                (_style & XFontStyle.BoldItalic) == XFontStyle.Italic));
+                (style == XFontStyle.Bold || style == XFontStyle.BoldItalic),
+                (style == XFontStyle.Italic || style == XFontStyle.BoldItalic)));
             _glyphTypeface = FontLoader.LaddaGlyphTypeface(fontSource.Key); // new XGlyphTypeface(fontSource);
 #endif
 

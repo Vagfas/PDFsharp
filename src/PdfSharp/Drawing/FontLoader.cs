@@ -18,15 +18,6 @@ namespace PdfSharp.Drawing
         private static Func<string, byte[]> LaddaFunc;
         private static Func<string, float, bool, bool, string> ResolveFunc;
 
-        enum Fonter
-        {
-            Calibri,
-            CalibriBold,
-            CalibriBoldItalic,
-            CalibriItalic,
-            OCRB10Pitch
-        }
-
         public static void Init(Func<string, byte[]> laddaFunc, Func<string, float, bool, bool, string> resolveFunc)
         {
             LaddaFunc = laddaFunc;
