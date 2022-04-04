@@ -3,9 +3,9 @@
 // Authors:
 //   Stefan Lange
 //
-// Copyright (c) 2005-2017 empira Software GmbH, Cologne Area (Germany)
+// Copyright (c) 2005-2016 empira Software GmbH, Cologne Area (Germany)
 //
-// http://www.pdfsharp.com
+// http://www.PdfSharpCore.com
 // http://sourceforge.net/projects/pdfsharp
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -76,43 +76,21 @@ namespace PdfSharp.Pdf.IO
             }
         }
 
-		/// <summary>
-		/// Reads the next token and returns its type. If the token starts with a digit, the parameter
-		/// testReference specifies how to treat it. If it is false, the lexer scans for a single integer.
-		/// If it is true, the lexer checks if the digit is the prefix of a reference. If it is a reference,
-		/// the token is set to the object ID followed by the generation number separated by a blank
-		/// (the 'R' is omitted from the token).
-		/// </summary>
-		// /// <param name="testReference">Indicates whether to test the next token if it is a reference.</param>
-		public Symbol ScanNextToken()
-		{
-			return ScanNextToken(out int location);
-		}
-
-		/// <summary>
-		/// Reads the next token and returns its type. If the token starts with a digit, the parameter
-		/// testReference specifies how to treat it. If it is false, the lexer scans for a single integer.
-		/// If it is true, the lexer checks if the digit is the prefix of a reference. If it is a reference,
-		/// the token is set to the object ID followed by the generation number separated by a blank
-		/// (the 'R' is omitted from the token).
-		/// </summary>
-		// /// <param name="location">The start position of the next token.</param>
-		public Symbol ScanNextToken(out int position)
+        /// <summary>
+        /// Reads the next token and returns its type. If the token starts with a digit, the parameter
+        /// testReference specifies how to treat it. If it is false, the lexer scans for a single integer.
+        /// If it is true, the lexer checks if the digit is the prefix of a reference. If it is a reference,
+        /// the token is set to the object ID followed by the generation number separated by a blank
+        /// (the 'R' is omitted from the token).
+        /// </summary>
+        // /// <param name="testReference">Indicates whether to test the next token if it is a reference.</param>
+        public Symbol ScanNextToken()
         {
-            Symbol symbol = Symbol.None;
-            if (!TryScanNextToken(out symbol, out position))
-                ParserDiagnostics.HandleUnexpectedCharacter(_nextChar);
-            return symbol;
-        }
-
-        public bool TryScanNextToken(out Symbol symbol, out int position)
-        {
-            Again:
+        Again:
             _token = new StringBuilder();
 
             char ch = MoveToNonWhiteSpace();
-			position = Position;
-			switch (ch)
+            switch (ch)
             {
                 case '%':
                     // Eat comments, the parser doesn't handle them
@@ -121,90 +99,75 @@ namespace PdfSharp.Pdf.IO
                     goto Again;
 
                 case '/':
-                    symbol = _symbol = ScanName();
-                    return true;
-                    
+                    return _symbol = ScanName();
+
+                //case 'R':
+                //  if (Lexer.IsWhiteSpace(nextChar))
+                //  {
+                //    ScanNextChar();
+                //    return Symbol.R;
+                //  }
+                //  break;
+
                 case '+': //TODO is it so easy?
                 case '-':
-                    symbol = _symbol = ScanNumber();
-                    return true;
+                    return _symbol = ScanNumber();
 
                 case '(':
-                    symbol = _symbol = ScanLiteralString();
-                    return true;
+                    return _symbol = ScanLiteralString();
 
                 case '[':
                     ScanNextChar(true);
-                    symbol = _symbol = Symbol.BeginArray;
-                    return true;
+                    return _symbol = Symbol.BeginArray;
 
                 case ']':
                     ScanNextChar(true);
-                    symbol = _symbol = Symbol.EndArray;
-                    return true;
+                    return _symbol = Symbol.EndArray;
 
                 case '<':
                     if (_nextChar == '<')
                     {
                         ScanNextChar(true);
                         ScanNextChar(true);
-                        symbol = _symbol = Symbol.BeginDictionary;
-                        return true;
+                        return _symbol = Symbol.BeginDictionary;
                     }
-                    symbol = _symbol = ScanHexadecimalString();
-                    return true;
+                    return _symbol = ScanHexadecimalString();
 
                 case '>':
                     if (_nextChar == '>')
                     {
                         ScanNextChar(true);
                         ScanNextChar(true);
-                        symbol = _symbol = Symbol.EndDictionary;
-                        return true;
+                        return _symbol = Symbol.EndDictionary;
                     }
-
-                    symbol = _symbol = Symbol.None;
-                    return false;
+                    ParserDiagnostics.HandleUnexpectedCharacter(_nextChar);
+                    break;
 
                 case '.':
-                    symbol = _symbol = ScanNumber();
-                    return true;
+                    return _symbol = ScanNumber();
             }
             if (char.IsDigit(ch))
 #if true_
-                symbol = ScanNumberOrReference();
-                return true;
+                return ScanNumberOrReference();
 #else
                 if (PeekReference())
-                {
-                    symbol = _symbol = ScanNumber();
-                    return true;
-                }
+                    return _symbol = ScanNumber();
                 else
-                {
-                    symbol = _symbol = ScanNumber();
-                    return true;
-                }
+                    return _symbol = ScanNumber();
 #endif
 
             if (char.IsLetter(ch))
-            {
-                symbol = _symbol = ScanKeyword();
-                return true;
-            }
+                return _symbol = ScanKeyword();
 
             if (ch == Chars.EOF)
-            {
-                symbol = _symbol = Symbol.Eof;
-                return true;
-            }
+                return _symbol = Symbol.Eof;
 
             // #???
-            
-            symbol = _symbol = Symbol.None;
-            return false;
+
+            ParserDiagnostics.HandleUnexpectedCharacter(ch);
+            return _symbol = Symbol.None;
         }
-        
+
         /// <summary>
         /// Reads the raw content of a stream.
         /// </summary>
@@ -227,42 +190,13 @@ namespace PdfSharp.Pdf.IO
             else
                 pos = _idxChar + 1;
 
-			// Verify stream length and resolve if bad
-			string post_stream = ReadRawString(pos + length, ("endstream").Length + 2);
-
-			// Handle cases where the last char of a stream is \r or \n and is not included in length
-			while (post_stream[0] == Chars.LF || post_stream[0] == Chars.CR)
-				post_stream = post_stream.Remove(0, 1);
-
-			if (!post_stream.StartsWith("endstream"))
-			{
-				// find the first endstream occurrence
-				// first check to see if it is within the specified stream length.
-				int endstream_idx = post_stream.IndexOf("endstream", StringComparison.Ordinal);
-				if (endstream_idx == -1)
-				{
-					post_stream = ReadRawString(pos, _pdfLength - pos);
-					endstream_idx = post_stream.IndexOf("endstream", StringComparison.Ordinal);
-				}
-
-				if (endstream_idx != -1)
-				{
-					length = endstream_idx;
-				}
-			}
-			
-			_pdfSteam.Position = pos;
+            _pdfSteam.Position = pos;
             byte[] bytes = new byte[length];
             int read = _pdfSteam.Read(bytes, 0, length);
             Debug.Assert(read == length);
-            // With corrupted files, read could be different from length.
-            if (bytes.Length != read)
-            {
-                Array.Resize(ref bytes, read);
-            }
 
             // Synchronize idxChar etc.
-            Position = pos + read;
+            Position = pos + length;
             return bytes;
         }
 
@@ -308,67 +242,20 @@ namespace PdfSharp.Pdf.IO
             while (true)
             {
                 char ch = AppendAndScanNextChar();
+                if (IsWhiteSpace(ch) || IsDelimiter(ch) || ch == Chars.EOF)
+                    return _symbol = Symbol.Name;
 
-				if (ch == '#')
-				{
-					ScanNextChar(true);
-					char[] hex = new char[2];
-					hex[0] = _currChar;
-					hex[1] = _nextChar;
-					ScanNextChar(true);
-					// TODO Check syntax
-					ch = (char)(ushort)int.Parse(new string(hex), NumberStyles.AllowHexSpecifier);
-					_currChar = ch;
-					continue;
-				}
-				
-				if (IsNameOrCommentDelimiter(ch) || ch == Chars.EOF)
-				{
-					return _symbol = Symbol.Name;
-				}
-
-				if (IsWhiteSpace(ch))
-				{
-					//TODO: Check that the white space is valid.
-					return _symbol = Symbol.Name;
-				}
-
-				//Handle invalid delimiters
-				switch (ch)
-				{
-					case '(':
-						//TODO: Handle invalid delimiters
-						return _symbol = Symbol.Name;
-					case ')':
-						//TODO: Handle invalid delimiters
-						return _symbol = Symbol.Name;
-					case '<':
-						//TODO: Handle invalid delimiters
-						return _symbol = Symbol.Name;
-					case '>':
-						//TODO: Handle invalid delimiters
-						return _symbol = Symbol.Name;
-					case '[':
-						//TODO: Not Complete
-						if (IsWhiteSpace(_nextChar) || IsDelimiter(_nextChar) || char.IsNumber(_nextChar) || _nextChar == '-' || PeekArrayKeyword())
-						{
-							return _symbol = Symbol.Name;
-						}
-						break;
-					case ']':
-						//TODO: Not Complete
-						if (IsWhiteSpace(_nextChar) || IsDelimiter(_nextChar) || _nextChar == Chars.EOF)
-						{
-							return _symbol = Symbol.Name;
-						}
-						break;
-					case '{':
-						//TODO: Handle invalid delimiters
-						return _symbol = Symbol.Name;
-					case '}':
-						//TODO: Handle invalid delimiters
-						return _symbol = Symbol.Name;
-				}
+                if (ch == '#')
+                {
+                    ScanNextChar(true);
+                    char[] hex = new char[2];
+                    hex[0] = _currChar;
+                    hex[1] = _nextChar;
+                    ScanNextChar(true);
+                    // TODO Check syntax
+                    ch = (char)(ushort)int.Parse(new string(hex), NumberStyles.AllowHexSpecifier);
+                    _currChar = ch;
+                }
             }
         }
 
@@ -572,26 +459,25 @@ namespace PdfSharp.Pdf.IO
                                     continue;
 
                                 default:
-                                    // TODO IsOctalDigit(ch).
-                                    if (char.IsDigit(ch) && _nextChar != '8' && _nextChar != '9')  // First octal character.
+                                    if (char.IsDigit(ch))  // First octal character.
                                     {
-                                        //// Octal character code.
-                                        //if (ch >= '8')
-                                        //    ParserDiagnostics.HandleUnexpectedCharacter(ch);
+                                        // Octal character code.
+                                        if (ch >= '8')
+                                            ParserDiagnostics.HandleUnexpectedCharacter(ch);
 
                                         int n = ch - '0';
-                                        if (char.IsDigit(_nextChar) && _nextChar != '8' && _nextChar != '9')  // Second octal character.
+                                        if (char.IsDigit(_nextChar))  // Second octal character.
                                         {
                                             ch = ScanNextChar(false);
-                                            //if (ch >= '8')
-                                            //    ParserDiagnostics.HandleUnexpectedCharacter(ch);
+                                            if (ch >= '8')
+                                                ParserDiagnostics.HandleUnexpectedCharacter(ch);
 
                                             n = n * 8 + ch - '0';
-                                            if (char.IsDigit(_nextChar) && _nextChar != '8' && _nextChar != '9')  // Third octal character.
+                                            if (char.IsDigit(_nextChar))  // Third octal character.
                                             {
                                                 ch = ScanNextChar(false);
-                                                //if (ch >= '8')
-                                                //    ParserDiagnostics.HandleUnexpectedCharacter(ch);
+                                                if (ch >= '8')
+                                                    ParserDiagnostics.HandleUnexpectedCharacter(ch);
 
                                                 n = n * 8 + ch - '0';
                                             }
@@ -600,11 +486,9 @@ namespace PdfSharp.Pdf.IO
                                     }
                                     else
                                     {
-                                        // PDF 32000: "If the character following the REVERSE SOLIDUS is not one of those shown in Table 3, the REVERSE SOLIDUS shall be ignored."
                                         //TODO
                                         // Debug.As sert(false, "Not implemented; unknown escape character.");
-                                        // ParserDiagnostics.HandleUnexpectedCharacter(ch);
-                                        //GetType();
+                                        ParserDiagnostics.HandleUnexpectedCharacter(ch);
                                     }
                                     break;
                             }
@@ -681,24 +565,12 @@ namespace PdfSharp.Pdf.IO
                 if (char.IsLetterOrDigit(_currChar))
                 {
                     hex[0] = char.ToUpper(_currChar);
-                    // Second char is optional in PDF spec.
-                    if (char.IsLetterOrDigit(_nextChar))
-                    {
-                        hex[1] = char.ToUpper(_nextChar);
-                        ScanNextChar(true);
-                    }
-                    else
-                    {
-                        // We could check for ">" here and throw if we find anything else. The throw comes after the next iteration anyway.
-                        hex[1] = '0';
-                    }
-                    ScanNextChar(true);
-
+                    hex[1] = char.ToUpper(_nextChar);
                     int ch = int.Parse(new string(hex), NumberStyles.AllowHexSpecifier);
                     _token.Append(Convert.ToChar(ch));
+                    ScanNextChar(true);
+                    ScanNextChar(true);
                 }
-                else
-                    ParserDiagnostics.HandleUnexpectedCharacter(_currChar);
             }
             string chars = _token.ToString();
             int count = chars.Length;
@@ -742,24 +614,22 @@ namespace PdfSharp.Pdf.IO
                         // Treat single CR as LF.
                         _currChar = Chars.LF;
                     }
-					//Console.WriteLine();
-				}
+                }
             }
-			//Console.Write(_currChar);
             return _currChar;
         }
 
-		///// <summary>
-		///// Resets the current token to the empty string.
-		///// </summary>
-		//void ClearToken()
-		//{
-		//    _token.Length = 0;
-		//}
+        ///// <summary>
+        ///// Resets the current token to the empty string.
+        ///// </summary>
+        //void ClearToken()
+        //{
+        //    _token.Length = 0;
+        //}
 
-		bool PeekReference()
+        bool PeekReference()
         {
-            // A Reference has the form "nnn mmm R". The implementation of the parser used a
+            // A Reference has the form "nnn mmm R". The implementation of the the parser used a
             // reduce/shift algorithm in the first place. But this case is the only one we need to
             // look ahead 3 tokens. 
             int positon = Position;
@@ -800,43 +670,10 @@ namespace PdfSharp.Pdf.IO
             Position = positon;
             return true;
 
-            False:
+        False:
             Position = positon;
             return false;
         }
-
-		bool PeekArrayKeyword()
-		{
-			StringBuilder token = _token;
-			int position = Position;
-			ScanNextChar(true);
-
-			//Pretty sure I want to skip any non white space
-			char ch = MoveToNonWhiteSpace();
-
-			//reset the _token
-			_token = new StringBuilder();
-
-			while (!IsWhiteSpace(ch) && !IsDelimiter(ch))
-			{
-				ch = AppendAndScanNextChar();
-			}
-
-			bool b_is_keyword = false;
-			switch (_token.ToString())
-			{
-				case "null":
-				case "true":
-				case "false":
-					b_is_keyword = true;
-					break;
-			}
-
-			Position = position;
-			_token = token;
-
-			return b_is_keyword;
-		}
 
         /// <summary>
         /// Appends current character to the token and reads next one.
@@ -1025,24 +862,10 @@ namespace PdfSharp.Pdf.IO
             return false;
         }
 
-		/// <summary>
-		/// Indicates whether the specified character is a PDF delimiter character.
-		/// </summary>
-		internal static bool IsNameOrCommentDelimiter(char ch)
-		{
-			switch (ch)
-			{
-				case '/':
-				case '%':
-					return true;
-			}
-			return false;
-		}
-
-		/// <summary>
-		/// Gets the length of the PDF output.
-		/// </summary>
-		public int PdfLength
+        /// <summary>
+        /// Gets the length of the PDF output.
+        /// </summary>
+        public int PdfLength
         {
             get { return _pdfLength; }
         }
